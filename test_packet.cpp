@@ -34,7 +34,7 @@ protected:
 
 };
 
-TEST_F(PacketTest, TestBasicStream1) {
+/*TEST_F(PacketTest, TestStrings) {
     auto w = Packet::Writer(o);
 
     w.write("hello");
@@ -45,15 +45,15 @@ TEST_F(PacketTest, TestBasicStream1) {
 
     auto r = Packet::Reader(i);
 
-    auto res = r.read(5);
+    auto res = r.read_bytes(5);
 
     EXPECT_EQ("hello", res);
-}
+}*/
 
 TEST_F(PacketTest, TestStreamOneParameterFloat) {
     float value = 5.0f;
     o << Packet::packet << value;
-    ASSERT_EQ(4+4, o.tellp());
+    ASSERT_EQ(4, o.tellp());
     i.str(o.str());
 
     float f;
@@ -66,7 +66,7 @@ TEST_F(PacketTest, TestStreamOneParameterFloat) {
 TEST_F(PacketTest, TestStreamOneParameterUInt32odd) {
     uint32_t value = 0x55555555u;
     o << Packet::packet << value;
-    ASSERT_EQ(4+4, o.tellp());
+    ASSERT_EQ(4, o.tellp());
     i.str(o.str());
 
     uint32_t f;
@@ -79,7 +79,7 @@ TEST_F(PacketTest, TestStreamOneParameterUInt32odd) {
 TEST_F(PacketTest, TestStreamOneParameterUInt32even) {
     uint32_t value = 0xAAAAAAAAu;
     o << Packet::packet << value;
-    ASSERT_EQ(4+4, o.tellp());
+    ASSERT_EQ(4, o.tellp());
     i.str(o.str());
 
     uint32_t f;
@@ -91,7 +91,7 @@ TEST_F(PacketTest, TestStreamOneParameterUInt32even) {
 TEST_F(PacketTest, TestStreamOneParameterUInt64even) {
     uint64_t value = 0xAAAAAAAAAAAAAAAAul;
     o << Packet::packet << value;
-    ASSERT_EQ(8+4, o.tellp());
+    ASSERT_EQ(8, o.tellp());
     i.str(o.str());
 
     uint64_t f;
@@ -103,7 +103,7 @@ TEST_F(PacketTest, TestStreamOneParameterUInt64even) {
 TEST_F(PacketTest, TestStreamOneParameterUInt64odd) {
     uint64_t value = 0x5555555555555555ul;
     o << Packet::packet << value;
-    ASSERT_EQ(8+4, o.tellp());
+    ASSERT_EQ(8, o.tellp());
     i.str(o.str());
 
     uint64_t f;
@@ -117,7 +117,7 @@ TEST_F(PacketTest, TestStreamTwoParameters) {
     uint64_t value2 = 48385038;
 
     o << Packet::packet << value1 << value2;
-    ASSERT_EQ(4+8+4+4, o.tellp());
+    ASSERT_EQ(4+8, o.tellp());
 
     i.str(o.str());
 
@@ -137,17 +137,18 @@ struct test {
 };
 
 Packet::Reader operator>>(Packet::Reader r, test &t) {
-    // 4+4+8+3*4 = 28 + 4 for the outer packet
-    auto s = r.read(28);
-    auto inp = istringstream(s);
-    inp >> Packet::packet >> t.v1 >> t.v2 >> t.v3;
+    //auto s = r.read_bytes(16);
+    //auto inp = istringstream(s);
+    //inp >> Packet::packet >> t.v1 >> t.v2 >> t.v3;
+    r >> t.v1 >> t.v2 >> t.v3;
     return r;
 }
 
 Packet::Writer operator<<(Packet::Writer w, test const t) {
-    auto outp = ostringstream();
-    outp << Packet::packet << t.v1 << t.v2 << t.v3;
-    w.write(outp.str());
+    //auto outp = ostringstream();
+    //outp << Packet::packet << t.v1 << t.v2 << t.v3;
+    //w.write(outp.str());
+    w << t.v1 << t.v2 << t.v3;
 
     return w;
 }
@@ -156,7 +157,7 @@ Packet::Writer operator<<(Packet::Writer w, test const t) {
 TEST_F(PacketTest, TestStreamAggregate) {
     test values { 3.14159f, -3023943, 0xDEADBEEFDEADBEF };
     o << Packet::packet << values;
-    ASSERT_EQ(32, o.tellp());
+    ASSERT_EQ(16, o.tellp());
     i.str(o.str());
 
     test values2;
@@ -165,6 +166,50 @@ TEST_F(PacketTest, TestStreamAggregate) {
     ASSERT_EQ(values.v1, values2.v1);
     ASSERT_EQ(values.v2, values2.v2);
     ASSERT_EQ(values.v3, values2.v3);
+}
 
+TEST_F(PacketTest, TestStrings1) {
+    auto w = Packet::Writer(o);
 
+    std::string test_in = "this is a test";
+    w.write(test_in);
+    ASSERT_EQ(test_in.size() + 2, o.tellp());
+
+    i.str(o.str());
+    std::string test_out;
+    auto r = Packet::Reader(i);
+    r.read(test_out);
+
+    ASSERT_EQ(test_in, test_out);
+}
+
+TEST_F(PacketTest, TestStrings2) {
+    auto w = Packet::Writer(o);
+
+    std::string test_in = "this is a test";
+    w.write_fixed_string(test_in, test_in.size());
+    ASSERT_EQ(test_in.size() + 2, o.tellp());
+
+    i.str(o.str());
+    std::string test_out;
+    auto r = Packet::Reader(i);
+    r.read(test_out);
+
+    ASSERT_EQ(test_in, test_out);
+}
+
+TEST_F(PacketTest, TestStrings3) {
+    auto w = Packet::Writer(o);
+
+    std::string test_in = "this is a test";
+    w.write_fixed_string(test_in, test_in.size()+2);
+
+    ASSERT_EQ(test_in.size() + 4, o.tellp());
+
+    i.str(o.str());
+    std::string test_out;
+    auto r = Packet::Reader(i);
+    r.read(test_out);
+
+    ASSERT_EQ(test_in, test_out);
 }
