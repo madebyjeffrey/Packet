@@ -125,7 +125,7 @@ namespace Packet {
                 write_bytes(data);
                 auto remainder = fixed_size - 2 - data.size(); // this value seems to be wrong
                 if (remainder > 0 && remainder < fixed_size)
-                    write(std::string(remainder, '\0'));
+                    write_bytes(std::string(remainder, '\0'));
             } else {
                 std::stringstream error;
                 error << "Argument size mismatch, fixed size is "

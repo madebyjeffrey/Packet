@@ -213,3 +213,28 @@ TEST_F(PacketTest, TestStrings3) {
 
     ASSERT_EQ(test_in, test_out);
 }
+
+TEST_F(PacketTest, TestStrings4) {
+    auto w = Packet::Writer(o);
+
+    std::string test_in = "abcd";
+    w.write_fixed_string(test_in, 20);
+
+    // output size should be 22
+
+    ASSERT_EQ(22, o.tellp());
+
+    i.str(o.str());
+    std::string test_out;
+    auto r = Packet::Reader(i);
+    r.read(test_out);
+
+    ASSERT_EQ(test_in, test_out);
+}
+
+TEST_F(PacketTest, TestStrings5) {
+    auto w = Packet::Writer(o);
+
+    std::string test_in = "abcd";
+    ASSERT_THROW(w.write_fixed_string(test_in, 5), std::invalid_argument);
+}
