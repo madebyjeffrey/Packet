@@ -15,3 +15,6 @@ add_executable(packet_tests test_packet.cpp)
 target_link_libraries(packet_tests gtest gtest_main)
 
 add_test(NAME Packet-Test COMMAND packet_tests)
+
+set(PACKET_HEADER_PATH ${PROJECT_SOURCE_DIR})
+set(PACKET_LIBRARY_PATH ${PROJECT_BINARY_DIR})

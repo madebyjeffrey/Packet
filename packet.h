@@ -16,8 +16,6 @@
 #include <type_traits>
 
 namespace Packet {
-
-
     class Reader {
         std::istream &stream;
 
@@ -45,6 +43,8 @@ namespace Packet {
             return std::string(buffer, buffer+size);
         }
 
+        // we could have read just return the type
+        // it wouldn't be a problem for function names (tested)
         template<typename T>
         std::enable_if_t<std::is_fundamental<T>::value, void> read(T &f) {
             constexpr size_t sz = sizeof(T);
@@ -151,7 +151,7 @@ namespace Packet {
 
     template<typename T>
     inline std::enable_if_t<std::is_fundamental<T>::value, Writer> operator<<(Writer w, T f) {
-        w.write(std::forward<T>(f));
+        w.write(f);
 
         return w;
     }
